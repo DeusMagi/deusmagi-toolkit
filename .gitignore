@@ -1,0 +1,10 @@
+# CMake Files
+
+CMakeFiles
+CMakeCache.txt
+Makefile
+
+# CMake Headers
+
+cmake.h
+gitversion.h
