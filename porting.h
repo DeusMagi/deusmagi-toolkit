@@ -227,10 +227,6 @@
 #define MSG_DONTWAIT 0
 #endif
 
-#ifndef HAVE_IPV6
-#define sockaddr_storage sockaddr_in
-#endif
-
 /** Used for faces. */
 typedef uint16_t Fontindex;
 

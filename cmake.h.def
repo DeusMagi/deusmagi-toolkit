@@ -189,10 +189,6 @@
 #cmakedefine HAVE_GETADDRINFO
 #endif
 
-#ifndef HAVE_IPV6
-#cmakedefine HAVE_IPV6
-#endif
-
 #ifndef HAVE_SINCOS
 #cmakedefine HAVE_SINCOS
 #endif

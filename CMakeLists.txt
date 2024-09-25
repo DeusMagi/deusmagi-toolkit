@@ -144,8 +144,6 @@ elseif (LINUX)
     check_function_exists(getaddrinfo HAVE_GETADDRINFO)
 endif ()
 
-try_compile(HAVE_IPV6 ${CMAKE_CURRENT_BINARY_DIR}/compile_tests ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ipv6test.c)
-
 # Generate the CMake configuration header file.
 configure_file(cmake.h.def cmake.h)
 

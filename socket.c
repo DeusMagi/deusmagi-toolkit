@@ -81,13 +81,10 @@ struct sock_struct {
 union sockaddr_union {
     struct sockaddr sa; ///< sockaddr.
     struct sockaddr_in in4; ///< IPv4.
-#ifdef HAVE_IPV6
     struct sockaddr_in6 in6; ///< IPv6.
     struct sockaddr_storage storage; ///< Storage.
-#endif
 };
 
-#ifdef HAVE_IPV6
 struct in6_addr_helper {
     union {
         uint8_t __u6_addr8[16];
@@ -98,7 +95,6 @@ struct in6_addr_helper {
 #   define s6_addr16__ __in6_u.__u6_addr16
 #   define s6_addr32__ __in6_u.__u6_addr32
 };
-#endif
 
 TOOLKIT_API();
 
@@ -179,18 +175,15 @@ socket_create (const char   *host,
     }
 
     for (struct addrinfo *ai = res; ai != NULL; ai = ai->ai_next) {
-#ifdef HAVE_IPV6
         if (host == NULL && ai->ai_family != AF_INET6) {
             continue;
         }
-#endif
 
         sc->handle = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         if (sc->handle == -1) {
             continue;
         }
 
-#ifdef HAVE_IPV6
         if (ai->ai_family == AF_INET6) {
             int flag = !dual_stack;
             if (setsockopt(sc->handle, IPPROTO_IPV6, IPV6_V6ONLY,
@@ -202,7 +195,6 @@ socket_create (const char   *host,
                 goto error;
             }
         }
-#endif
 
         memcpy(&sc->addr, ai->ai_addr, res->ai_addrlen);
         break;
@@ -304,7 +296,6 @@ int socket_cmp_addr(socket_t *sc, const struct sockaddr_storage *addr,
     HARD_ASSERT(sc != NULL);
     HARD_ASSERT(addr != NULL);
 
-#ifdef HAVE_IPV6
     const struct sockaddr *saddr1 = (const struct sockaddr *) &sc->addr;
     const struct sockaddr *saddr2 = (const struct sockaddr *) addr;
 
@@ -343,7 +334,6 @@ int socket_cmp_addr(socket_t *sc, const struct sockaddr_storage *addr,
             return socket_addr_cmp(&sc->addr, &addr_new, 96 + plen);
         }
     }
-#endif
 
     return socket_addr_cmp(&sc->addr, addr, plen);
 }
@@ -946,28 +936,18 @@ bool socket_host2addr(const char *host, struct sockaddr_storage *addr)
 /** @cond */
 static const char *inet_ntop(int af, const void *src, char *dst, size_t size)
 {
-#ifdef HAVE_IPV6
     struct sockaddr_storage ss;
-#else
-    struct sockaddr ss;
-#endif
     ZeroMemory(&ss, sizeof(ss));
-#ifdef HAVE_IPV6
     ss.ss_family = af;
-#else
-    ss.sa_family = af;
-#endif
 
     switch (af) {
         case AF_INET:
             ((struct sockaddr_in *) &ss)->sin_addr = *(struct in_addr *) src;
             break;
 
-#ifdef HAVE_IPV6
         case AF_INET6:
             ((struct sockaddr_in6 *) &ss)->sin6_addr = *(struct in6_addr *) src;
             break;
-#endif
 
         default:
             LOG(ERROR, "Unknown family: %d", af);
@@ -1006,20 +986,13 @@ const char *socket_addr2host(const struct sockaddr_storage *addr, char *buf,
     HARD_ASSERT(buf != NULL);
 
     const struct sockaddr_in *saddr = (const struct sockaddr_in *) addr;
-#ifdef HAVE_IPV6
+
     if (saddr->sin_family == AF_INET6) {
         const struct sockaddr_in6 *saddr6 = (const struct sockaddr_in6 *) addr;
         return inet_ntop(saddr6->sin6_family, &saddr6->sin6_addr, buf,
                 bufsize);
     }
     return inet_ntop(saddr->sin_family, &saddr->sin_addr, buf, bufsize);
-#else
-#ifdef WIN32
-    return inet_ntop(saddr->sin_family, &saddr->sin_addr, buf, bufsize);
-#else
-    return inet_ntoa_r(saddr->sin_addr, buf, bufsize);
-#endif
-#endif
 }
 
 /**
@@ -1036,11 +1009,9 @@ unsigned short socket_addr_plen(const struct sockaddr_storage *addr)
 
     struct sockaddr_in *saddr = (struct sockaddr_in *) addr;
 
-#ifdef HAVE_IPV6
     if (saddr->sin_family == AF_INET6) {
         return 128;
     }
-#endif
 
     if (saddr->sin_family == AF_INET) {
         return 32;
@@ -1090,7 +1061,6 @@ int socket_addr_cmp(const struct sockaddr_storage *a,
         break;
     }
 
-#ifdef HAVE_IPV6
     case AF_INET6:
     {
         HARD_ASSERT(plen <= 128);
@@ -1118,7 +1088,6 @@ int socket_addr_cmp(const struct sockaddr_storage *a,
                 ((sin6_addr1->s6_addr32__[3] ^
                 sin6_addr2->s6_addr32__[3]) & mask.s6_addr32__[3])));
     }
-#endif
 
     default:
         LOG(ERROR, "Don't know how to compare socket family: %u",
