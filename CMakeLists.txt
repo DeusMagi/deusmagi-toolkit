@@ -1,8 +1,6 @@
-# The Atrinik toolkit CMakeLists file.
-
-project(atrinik-toolkit C)
+project(deusmagi-toolkit C)
 cmake_minimum_required(VERSION 3.2)
-set(ATRINIK_TOOLKIT atrinik-toolkit)
+set(DEUSMAGI_TOOLKIT deusmagi-toolkit)
 
 # cURL is required by the metaserver.
 find_package(CURL REQUIRED)
@@ -205,51 +203,51 @@ set(TOOLKIT_SOURCES
     x11.c
     )
 
-add_library(${ATRINIK_TOOLKIT} ${TOOLKIT_SOURCES})
+add_library(${DEUSMAGI_TOOLKIT} ${TOOLKIT_SOURCES})
 
-target_link_libraries(${ATRINIK_TOOLKIT} ${CURL_LIBRARIES})
-target_link_libraries(${ATRINIK_TOOLKIT} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${CURL_LIBRARIES})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${CMAKE_THREAD_LIBS_INIT})
 
 if (MINGW)
-    target_link_libraries(${ATRINIK_TOOLKIT} wsock32 idn wldap32 ssh2 rtmp winmm
+    target_link_libraries(${DEUSMAGI_TOOLKIT} wsock32 idn wldap32 ssh2 rtmp winmm
             ws2_32 imagehlp)
 endif ()
 
-target_link_libraries(${ATRINIK_TOOLKIT} ${ZLIB_LIBRARIES})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${ZLIB_LIBRARIES})
 
 # Link math...
 if (MATH_LIBRARY)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${MATH_LIBRARY})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${MATH_LIBRARY})
 endif ()
 
 # Link crypt.
 if (CRYPT_LIBRARY)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${CRYPT_LIBRARY})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${CRYPT_LIBRARY})
 endif ()
 
 # Link readline if available.
 if (HAVE_READLINE)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${READLINE_LIBRARY})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${READLINE_LIBRARY})
 endif ()
 
 if (HAVE_CHECK)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${CHECK_LIBRARY})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${CHECK_LIBRARY})
 
     if (UNIX AND NOT APPLE)
-        target_link_libraries(${ATRINIK_TOOLKIT} rt)
+        target_link_libraries(${DEUSMAGI_TOOLKIT} rt)
     endif ()
 endif ()
 
 # Link X11 if available.
 if (HAVE_X11)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${X11_LIBRARIES})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_LIBRARIES})
 endif ()
 
 # Link X11 XMU if available.
 if (HAVE_X11_XMU)
-    target_link_libraries(${ATRINIK_TOOLKIT} ${X11_XMU_LIBRARY})
+    target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_XMU_LIBRARY})
 endif ()
 
-target_link_libraries(${ATRINIK_TOOLKIT} ${OPENSSL_LIBRARIES})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${OPENSSL_LIBRARIES})
 
-add_dependencies(${ATRINIK_TOOLKIT} git_branch)
+add_dependencies(${DEUSMAGI_TOOLKIT} git_branch)

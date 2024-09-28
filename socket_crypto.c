@@ -1,27 +1,3 @@
-/*************************************************************************
- *           Atrinik, a Multiplayer Online Role Playing Game             *
- *                                                                       *
- *   Copyright (C) 2009-2014 Alex Tokar and Atrinik Development Team     *
- *                                                                       *
- * Fork from Crossfire (Multiplayer game for X-windows).                 *
- *                                                                       *
- * This program is free software; you can redistribute it and/or modify  *
- * it under the terms of the GNU General Public License as published by  *
- * the Free Software Foundation; either version 2 of the License, or     *
- * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
- *                                                                       *
- * You should have received a copy of the GNU General Public License     *
- * along with this program; if not, write to the Free Software           *
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.             *
- *                                                                       *
- * The author can be reached at admin@atrinik.org                        *
- ************************************************************************/
-
 /**
  * @file
  * Socket crypto implementation.
@@ -2322,7 +2298,7 @@ socket_crypto_encrypt (socket_t      *sc,
         packet_len += enc_len + 1;
         packet = packet_new(0, packet_len, 0);
     } else if (crypto->key != NULL) {
-        /* We need to include the Atrinik command type as well. */
+        /* We need to include the command type as well. */
         packet_orig_len += 1;
         enc_len = (((packet_orig_len + AES_BLOCK_SIZE) / AES_BLOCK_SIZE) *
                    AES_BLOCK_SIZE);
@@ -2351,7 +2327,7 @@ socket_crypto_encrypt (socket_t      *sc,
     }
 
     if (checksum_only || crypto->last_cmd < CMD_CRYPTO_KEY) {
-        packet_debug_data(packet_meta, 0, "Atrinik packet type");
+        packet_debug_data(packet_meta, 0, "Packet type");
         packet_append_uint8(packet_meta, packet_orig_type);
     } else {
         packet_debug_data(packet_meta, 0, "Decrypted length");
@@ -2450,7 +2426,7 @@ socket_crypto_encrypt (socket_t      *sc,
     }
 
     if (checksum_only || crypto->last_cmd < CMD_CRYPTO_KEY) {
-        /* Checksum the Atrinik packet type */
+        /* Checksum the packet type */
         if (SHA256_Update(&ctx,
                           &packet_orig_type,
                           sizeof(packet_orig_type)) != 1) {
@@ -2548,7 +2524,7 @@ socket_crypto_decrypt (socket_t *sc,
     *len_out = 0;
 
     /* Require packets to always have the SHA256 checksum + 1 byte for
-     * crypto command type + 1 byte for Atrinik command type */
+     * crypto command type + 1 byte for command type */
     if (len < SHA256_DIGEST_LENGTH + 2) {
         LOG(ERROR,
             "Crypto packet length is too short, %" PRIu64 " bytes from %s",
