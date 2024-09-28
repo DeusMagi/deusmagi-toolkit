@@ -8,11 +8,16 @@ Makefile
 
 cmake.h
 gitversion.h
+version.h
 
 # CMake Packaging
 
 cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+_CPack_Packages/
 
 # General
 
+*.o
 *.a
