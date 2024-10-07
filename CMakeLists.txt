@@ -1,8 +1,8 @@
+cmake_minimum_required(VERSION 3.12)
+
 project(deusmagi-toolkit C)
-cmake_minimum_required(VERSION 3.2)
 set(DEUSMAGI_TOOLKIT deusmagi-toolkit)
 
-# cURL is required by the metaserver.
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIR})
 set(HAVE_CURL true)
@@ -11,78 +11,23 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIR})
 set(HAVE_ZLIB true)
 
-# Try to find some GNU/Linux libraries.
-if (UNIX)
-    find_library(MATH_LIBRARY m)
+find_package(X11 REQUIRED)
+include_directories(${X11_INCLUDE_DIR})
+set(HAVE_X11 true)
+    
+find_library(X11_XMU_LIBRARY Xmu /usr/openwin/lib REQUIRED)
+set(HAVE_X11_XMU true)
 
-    if (NOT MATH_LIBRARY)
-        message(FATAL_ERROR "Could not find math library.")
-    endif ()
-
-    find_package(X11)
-
-    if (X11_FOUND)
-        include_directories(${X11_INCLUDE_DIR})
-        set(HAVE_X11 true)
-
-        # Try to find X11 XMU.
-        find_library(X11_XMU_LIBRARY Xmu /usr/openwin/lib)
-
-        if (X11_XMU_LIBRARY)
-            set(HAVE_X11_XMU true)
-        else ()
-            message(STATUS "Warning: X11 XMU not found, some features may be disabled")
-        endif ()
-    else ()
-        message(STATUS "Warning: X11 not found, some features may be disabled")
-    endif ()
-endif ()
+find_library(MATH_LIBRARY m)
 
 find_library(CRYPT_LIBRARY crypt)
-
-if (CRYPT_LIBRARY)
-    set(HAVE_CRYPT true)
-else ()
-    message(STATUS "Could not find crypt library, encryption of strings such as passwords will be disabled.")
-endif ()
+set(HAVE_CRYPT true)
 
 find_library(READLINE_LIBRARY readline)
-
-if (READLINE_LIBRARY)
-    set(HAVE_READLINE true)
-else ()
-    message(STATUS "Could not find readline library, simple interactive console will be compiled instead.")
-endif ()
-
-find_library(CHECK_LIBRARY check)
-
-if (CHECK_LIBRARY)
-    set(HAVE_CHECK true)
-else ()
-    message(STATUS "Could not find check library, unit tests will not be compiled.")
-endif ()
+set(HAVE_READLINE true)
 
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
-
-# This is very ugly. There is essentially a namespace clash between newer
-# MinGW and the Windows port of pthreads, and they both define a timespec
-# structure. This would be OK if both checked for its existence, but the
-# bigger problem is that the two definitions are *INCOMPATIBLE*. Indeed,
-# the pthread.h version uses a 32-bit integer for the seconds timestamp,
-# while the MinGW time.h one uses a 64-bit one.
-#
-# The solution below disables the pthread.h declaration. This means that
-# any code working with a timespec assumes the MinGW structure declaration,
-# and if there is any code involving pthreads that passes around a
-# timespec... tough luck.
-#
-# Also, we need it here, otherwise the threads check below will not set the
-# correct libraries to use.
-if (MINGW)
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -DHAVE_STRUCT_TIMESPEC)
-    add_definitions(-DHAVE_STRUCT_TIMESPEC)
-endif ()
 
 find_package(Threads REQUIRED)
 
@@ -90,9 +35,7 @@ include(CheckIncludeFiles)
 include(CheckFunctionExists)
 
 set(CMAKE_REQUIRED_INCLUDES "math.h")
-set(CMAKE_REQUIRED_LIBRARIES "m")
 
-# Check for various include files.
 check_include_files(fcntl.h HAVE_FCNTL_H)
 check_include_files(unistd.h HAVE_UNISTD_H)
 check_include_files(sys/time.h HAVE_SYS_TIME_H)
@@ -107,7 +50,6 @@ check_include_files(crypt.h HAVE_CRYPT_H)
 check_include_files(arpa/inet.h HAVE_ARPA_INET_H)
 check_include_files(valgrind/valgrind.h HAVE_VALGRIND_H)
 
-# Check for various functions.
 check_function_exists(strerror HAVE_STRERROR)
 check_function_exists(strcasecmp HAVE_STRCASECMP)
 check_function_exists(strncasecmp HAVE_STRNCASECMP)
@@ -131,49 +73,10 @@ check_function_exists(strnlen HAVE_STRNLEN)
 check_function_exists(mkstemp HAVE_MKSTEMP)
 check_function_exists(sincos HAVE_SINCOS)
 check_function_exists(pselect HAVE_PSELECT)
+check_function_exists(getaddrinfo HAVE_GETADDRINFO)
 
-if (WIN32)
-    check_include_files(wspiapi.h HAVE_WSPIAPI_H)
-    check_include_files(ws2tcpip.h HAVE_WS2TCPIP_H)
-    if (HAVE_WSPIAPI_H OR HAVE_WS2TCPIP_H)
-        set(HAVE_GETADDRINFO TRUE)
-    endif (HAVE_WSPIAPI_H OR HAVE_WS2TCPIP_H)
-elseif (LINUX)
-    check_function_exists(getaddrinfo HAVE_GETADDRINFO)
-endif ()
-
-# Generate the CMake configuration header file.
 configure_file(cmake.h.def cmake.h)
 
-# Generate a header file with the Git version used to compile the library.
-find_program(GIT_SCM git DOC "Git version control")
-mark_as_advanced(GIT_SCM)
-find_file(GITDIR NAMES .git PATHS ../ NO_DEFAULT_PATH)
-set(GITVERSION_H gitversion.h)
-
-if (GIT_SCM AND GITDIR)
-    add_custom_command(OUTPUT ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo "#ifndef GITVERSION_H" > ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo_append "#define GITVERSION " >> ${GITVERSION_H}
-        COMMAND ${GIT_SCM} --git-dir "${GITDIR}" log -1 "--pretty=format:%h" >> ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo "" >> ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo_append "#define GITAUTHOR " >> ${GITVERSION_H}
-        COMMAND ${GIT_SCM} --git-dir "${GITDIR}" log -1 "--pretty=format:%an" >> ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo "" >> ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo_append "#define GITBRANCH " >> ${GITVERSION_H}
-        COMMAND ${GIT_SCM} --git-dir "${GITDIR}" rev-parse --abbrev-ref HEAD >> ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo "#endif" >> ${GITVERSION_H}
-        DEPENDS ${GITDIR}/logs/HEAD
-        VERBATIM
-    )
-else ()
-    add_custom_command(OUTPUT ${GITVERSION_H}
-        COMMAND ${CMAKE_COMMAND} -E echo_append "" > ${GITVERSION_H}
-        VERBATIM
-    )
-endif ()
-
-add_custom_target(git_branch DEPENDS ${GITVERSION_H})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(TOOLKIT_SOURCES
@@ -201,53 +104,16 @@ set(TOOLKIT_SOURCES
     string.c
     toolkit.c
     x11.c
-    )
+)
 
 add_library(${DEUSMAGI_TOOLKIT} ${TOOLKIT_SOURCES})
 
 target_link_libraries(${DEUSMAGI_TOOLKIT} ${CURL_LIBRARIES})
 target_link_libraries(${DEUSMAGI_TOOLKIT} ${CMAKE_THREAD_LIBS_INIT})
-
-if (MINGW)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} wsock32 idn wldap32 ssh2 rtmp winmm
-            ws2_32 imagehlp)
-endif ()
-
 target_link_libraries(${DEUSMAGI_TOOLKIT} ${ZLIB_LIBRARIES})
-
-# Link math...
-if (MATH_LIBRARY)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${MATH_LIBRARY})
-endif ()
-
-# Link crypt.
-if (CRYPT_LIBRARY)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${CRYPT_LIBRARY})
-endif ()
-
-# Link readline if available.
-if (HAVE_READLINE)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${READLINE_LIBRARY})
-endif ()
-
-if (HAVE_CHECK)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${CHECK_LIBRARY})
-
-    if (UNIX AND NOT APPLE)
-        target_link_libraries(${DEUSMAGI_TOOLKIT} rt)
-    endif ()
-endif ()
-
-# Link X11 if available.
-if (HAVE_X11)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_LIBRARIES})
-endif ()
-
-# Link X11 XMU if available.
-if (HAVE_X11_XMU)
-    target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_XMU_LIBRARY})
-endif ()
-
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${MATH_LIBRARY})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_LIBRARIES})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${X11_XMU_LIBRARY})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${CRYPT_LIBRARY})
+target_link_libraries(${DEUSMAGI_TOOLKIT} ${READLINE_LIBRARY})
 target_link_libraries(${DEUSMAGI_TOOLKIT} ${OPENSSL_LIBRARIES})
-
-add_dependencies(${DEUSMAGI_TOOLKIT} git_branch)
