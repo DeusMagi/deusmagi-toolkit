@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.12)
 project(deusmagi-toolkit C)
 set(DEUSMAGI_TOOLKIT deusmagi-toolkit)
 
+set(CMAKE_SKIP_INSTALL_RULES true)
+
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIR})
 set(HAVE_CURL true)
