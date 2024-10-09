@@ -150,10 +150,10 @@ TOOLKIT_DEINIT_FUNC(memory)
         LOG(ERROR, "Unfreed pointer: %s", chunk_get_str(chunk));
     }
 
-    LOG(INFO, "Maximum number of bytes allocated: %" PRIu64,
+    LOG(SYSTEM, "Maximum number of bytes allocated: %" PRIu64,
             (uint64_t) memory_chunks_allocated_max);
 
-    LOG(INFO, "Maximum number of pointers allocated: %" PRIu64,
+    LOG(SYSTEM, "Maximum number of pointers allocated: %" PRIu64,
             (uint64_t) memory_chunks_num_max);
 
     if (memory_chunks_num != 0) {

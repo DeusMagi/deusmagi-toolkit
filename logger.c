@@ -93,7 +93,7 @@ TOOLKIT_INIT_FUNC(logger)
 
     logger_filter_stdout = logger_filter_logfile = 0;
 
-    logger_set_filter_stdout("all,-dumptx,-dumprx,-http");
+    logger_set_filter_stdout("info");
     logger_set_filter_logfile("all,-dumptx,-dumprx");
 
     if (logger_term_has_ansi_colors()) {
