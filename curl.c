@@ -1431,6 +1431,8 @@ curl_request_complete (curl_request_t *request)
     if (res != CURLE_OK) {
         LOG(ERROR, "curl_easy_perform() got error %d (%s).",
             res, curl_easy_strerror(res));
+        LOG(ERROR, "curl_easy_perform() got error buffer %s",
+            request->errorbuffer);
         return CURL_STATE_ERROR;
     }
 
