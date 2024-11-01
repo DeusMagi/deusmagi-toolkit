@@ -83,11 +83,7 @@ static void signal_handler(int sig, siginfo_t *siginfo, void *context)
     char path[MAX_BUF], date[MAX_BUF], *homedir;
     FILE *fp;
 
-#ifndef WIN32
     homedir = getenv("HOME");
-#else
-    homedir = getenv("APPDATA");
-#endif
 
     if (t == 0) {
         t = time(NULL);

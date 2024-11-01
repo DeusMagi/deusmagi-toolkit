@@ -126,13 +126,17 @@ TOOLKIT_DEINIT_FUNC_FINISH
  */
 void logger_open_log(const char *path)
 {
+    char log_path[MAX_BUF];
+    
     TOOLKIT_PROTECT();
 
     if (log_fp != NULL) {
         fclose(log_fp);
     }
-
-    log_fp = fopen(path, "w");
+    
+    snprintf(VS(log_path), "%s/.deusmagi/%s", getenv("HOME"), path);
+    
+    log_fp = fopen(log_path, "w");
 }
 
 /**
